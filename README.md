@@ -143,75 +143,101 @@ This project asks: **Can we build a reproducible, interpretable AQI forecast for
 
 ---
 
-## 🏗️ Architecture & Pipeline
+## Architecture & Pipeline
 
-<p>
-This section explains how raw air quality data flows from ingestion to forecasting and finally to the user-facing Streamlit application.
-</p>
+This section contains the complete Architecture & Pipeline documentation from ingestion through License.  
+Copy everything inside this code block and paste **as-is** into your `README.md`.
 
 ---
 
-### 🔹 Data Ingestion & Preprocessing
+### Pipeline Overview
 
-```mermaid
-flowchart TB
-    A[BBMP Open Data - Jayanagar AQI]
-    B[Raw Hourly CSV Data]
-    C[Data Cleaning]
-    D[Missing Value Handling]
-    E[Daily AQI Aggregation]
-    F[Feature Engineering]
-    G[Train Validation Split]
+This project converts raw public air-quality data into daily AQI forecasts and exposes them via an interactive Streamlit app. Main stages:
 
-    A --> B
-    B --> C
-    C --> D
-    D --> E
-    E --> F
-    F --> G
-<p> Hourly AQI data is collected from BBMP open datasets, cleaned to remove invalid values, and aggregated into daily averages. Calendar-based features are added before splitting the data for training and validation. </p>
-🔹 Model Training & Forecasting
-flowchart LR
-    G[Prepared Training Data]
-    M[Prophet Time Series Model]
-    P[Forecast Generation]
-    I[Prediction Intervals]
-    O[Daily AQI Output]
+1. Data ingestion & preprocessing  
+2. Model training & forecasting  
+3. Evaluation, reporting & app serving
 
-    G --> M
-    M --> P
-    P --> I
-    I --> O
-<p> The Prophet model captures long-term trends and seasonal patterns. Forecasts include a median prediction along with uncertainty bounds for each day. </p>
-🔹 Evaluation & Reporting
-flowchart LR
-    O[Forecast Output]
-    E1[Error Calculation]
-    E2[RMSE Metric]
-    R[Charts and Tables]
+---
 
-    O --> E1
-    E1 --> E2
-    E2 --> R
-<p> Forecast accuracy is evaluated using Root Mean Squared Error (RMSE) on log-transformed AQI values. Results are presented through charts and summary tables. </p>
-🔹 Streamlit Application Flow
-flowchart TD
-    U[User]
-    UI[Streamlit Interface]
-    S[User Input Selection]
-    L[Load Trained Model]
-    F[Generate Forecast]
-    V[Visualize Results]
-    D[Download CSV]
+### 1) Data Ingestion & Preprocessing
 
-    U --> UI
-    UI --> S
-    S --> L
-    L --> F
-    F --> V
-    V --> UI
-    UI --> D
-<p> Users select a year and month via the Streamlit interface. The trained model generates forecasts that are visualized and can be exported as CSV files. </p>
+**Input:** hourly AQI readings from BBMP Open Data (Jayanagar)
+
+**Pipeline steps**
+- Load raw hourly CSV files from the public dataset.
+- Standardize timestamps and unify formats.
+- Remove invalid records and filter out obvious outliers.
+- Impute short gaps (forward/backfill) and flag long gaps for exclusion.
+- Aggregate hourly readings into **daily average AQI** (model target).
+- Generate calendar/time features: day of week, month, holiday flags, rolling averages.
+- Split data into training and validation windows preserving time order.
+
+**Output:** clean daily time-series ready for modeling.
+
+Data Ingestion ASCII
+[BBMP Hourly CSV] -> [Load] -> [Clean] -> [Impute] -> [Aggregate to Daily] -> [Feature Engineering] -> [Train/Val Split]
+
+
+---
+
+### 2) Model Training & Forecasting
+
+**Model used:** Prophet (trend + seasonality)
+
+**Training steps**
+- Optionally apply log-transform to AQI to stabilize variance from spikes.
+- Fit Prophet on daily series with yearly & weekly seasonalities enabled.
+- Use changepoint detection to adapt to structural shifts.
+- Tune hyperparameters (seasonality_prior_scale, changepoint_prior_scale) using holdout or cross-validation.
+
+**Forecasting steps**
+- Generate forecasts for requested horizon (days, months, up to ~6 years given data).
+- Output median forecast plus lower/upper uncertainty bounds.
+- Post-process forecasts: inverse-transform (if used), clip to plausible AQI range, format daily CSV/table.
+
+**Output:** daily AQI forecasts + uncertainty intervals, saved CSV and serialized model artifact.
+
+Model Training ASCII
+[Prepared Training Data] -> [Prophet Model Fit] -> [Forecast Generation] -> [Post-process] -> [CSV + Model Artifact]
+
+
+---
+
+### 3) Evaluation & Reporting
+
+**Evaluation approach**
+- Use a time-ordered holdout window or back-testing folds.
+- Compute error metrics: MAE, RMSE (report RMSE on log-transformed target for stability).
+- Produce diagnostic plots: residuals, historical vs predicted, prediction interval coverage.
+- Export numeric metrics and visual assets (PNG/CSV) for reproducibility.
+
+**Example reported metric**
+- RMSE (on log-transformed AQI): `2.8069` (placeholder — update from notebooks for exact current value).
+
+Evaluation ASCII
+[Forecast Output] -> [Compute Metrics (MAE, RMSE)] -> [Diagnostic Plots] -> [Export CSV/PNG]
+
+
+---
+
+### 4) Streamlit Application Flow
+
+**User flow**
+1. User selects year/month/day in UI controls.  
+2. Backend loads serialized Prophet model artifact.  
+3. Backend generates daily forecasts + prediction intervals for selected horizon.  
+4. UI displays:
+   - Historical vs predicted trend charts (median + intervals)  
+   - Daily forecast table (median, lower, upper)  
+   - Weekly/monthly summary and aggregates  
+5. User can download forecast table as CSV.
+
+**Deployment note**
+- App can be hosted on Streamlit Cloud, Heroku, or similar. Store model artifacts in `model/`, processed data in `data/`.
+
+Streamlit Flow ASCII
+[User] -> [Streamlit Controls] -> [Load Model] -> [Generate Forecast] -> [Render Charts & Table] -> [CSV Download]
 
 ---
 
