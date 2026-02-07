@@ -143,102 +143,108 @@ This project asks: **Can we build a reproducible, interpretable AQI forecast for
 
 ---
 
-## Architecture & pipeline (Mermaid diagrams — paste into README as-is)
+## 🏗️ Architecture & Pipeline
 
-### Data ingestion & preprocessing
+<p>
+This section explains how raw air quality data flows from ingestion to forecasting and finally to the user-facing Streamlit application.
+</p>
+
+---
+
+### 🔹 Data Ingestion & Preprocessing
+
 ```mermaid
 flowchart TB
-  A[BBMP Open Data (Jayanagar hourly)] --> B[Raw CSV files]
-  B --> C[Cleaning & Imputation]
-  C --> D[Aggregate to Daily AQI]
-  D --> E[Feature Engineering]
-  E --> F[Train / Val Split]
+    A[BBMP Open Data - Jayanagar AQI]
+    B[Raw Hourly CSV Data]
+    C[Data Cleaning]
+    D[Missing Value Handling]
+    E[Daily AQI Aggregation]
+    F[Feature Engineering]
+    G[Train Validation Split]
 
+    A --> B
+    B --> C
+    C --> D
+    D --> E
+    E --> F
+    F --> G
+<p> Hourly AQI data is collected from BBMP open datasets, cleaned to remove invalid values, and aggregated into daily averages. Calendar-based features are added before splitting the data for training and validation. </p>
+🔹 Model Training & Forecasting
 flowchart LR
-  F[Train/Val Data] --> M[Prophet Model (trend+seasonality)]
-  M --> P[Forecast: median + intervals]
-  P --> V[Postprocess: clip & inverse-transform]
-  V --> EVAL[Evaluate (MAE / RMSE)]
-  EVAL --> REPORT[Visuals + CSV]
+    G[Prepared Training Data]
+    M[Prophet Time Series Model]
+    P[Forecast Generation]
+    I[Prediction Intervals]
+    O[Daily AQI Output]
 
+    G --> M
+    M --> P
+    P --> I
+    I --> O
+<p> The Prophet model captures long-term trends and seasonal patterns. Forecasts include a median prediction along with uncertainty bounds for each day. </p>
+🔹 Evaluation & Reporting
+flowchart LR
+    O[Forecast Output]
+    E1[Error Calculation]
+    E2[RMSE Metric]
+    R[Charts and Tables]
+
+    O --> E1
+    E1 --> E2
+    E2 --> R
+<p> Forecast accuracy is evaluated using Root Mean Squared Error (RMSE) on log-transformed AQI values. Results are presented through charts and summary tables. </p>
+🔹 Streamlit Application Flow
 flowchart TD
-  U[User] -->|select year/month| UI[Streamlit Controls]
-  UI --> S[Request Forecast]
-  S --> M[Load trained Prophet model]
-  M --> R[Produce table + chart + CSV]
-  R --> UI
+    U[User]
+    UI[Streamlit Interface]
+    S[User Input Selection]
+    L[Load Trained Model]
+    F[Generate Forecast]
+    V[Visualize Results]
+    D[Download CSV]
 
-Model evaluation (summary)
+    U --> UI
+    UI --> S
+    S --> L
+    L --> F
+    F --> V
+    V --> UI
+    UI --> D
+<p> Users select a year and month via the Streamlit interface. The trained model generates forecasts that are visualized and can be exported as CSV files. </p>
 
-Reported metric example: RMSE (on log-transformed target) = 2.8069 (update with exact result from notebooks/metrics.ipynb).
+---
 
-Interpretation: lower RMSE on log target helps when data has large spikes; short-term forecasts (days–weeks) have better accuracy than multi-year projections.
+###📊 Model Evaluation Summary
 
-# 1. clone
+<p> <strong>Primary Metric:</strong> Root Mean Squared Error (RMSE) on log-transformed AQI values <br> <strong>Example Observed RMSE:</strong> <code>2.8069</code> </p> <p> Short-term forecasts (days to weeks) are more reliable for operational decisions. Long-term forecasts are best suited for trend analysis due to increasing uncertainty. </p>
+
+---
+
+###▶️ How to Run Locally
 git clone https://github.com/AdityaRKori/AirQualityPrediction.git
 cd AirQualityPrediction
 
-# 2. create & activate venv (optional)
 python -m venv venv
 source venv/bin/activate   # macOS / Linux
 venv\Scripts\activate      # Windows
 
-# 3. install
 pip install -r requirements.txt
-
-# 4. run app
 streamlit run app.py
 
-Files of interest
+---
 
-app.py — Streamlit UI
+###📁 Files of Interest
+<ul> <li><strong>app.py</strong> — Streamlit application interface</li> <li><strong>notebooks/train_prophet.ipynb</strong> — Data preprocessing and model training</li> <li><strong>data/</strong> — Raw and processed AQI datasets</li> <li><strong>model/</strong> — Saved Prophet model artifacts</li> <li><strong>requirements.txt</strong> — Python dependencies</li> </ul>
+###⚠️ Limitations & Caveats
+<ul> <li>Model trained only on Jayanagar AQI data</li> <li>Forecast horizon limited to approximately 6 years</li> <li>Weather variables are not included</li> <li>Predictions are probabilistic and must be interpreted with uncertainty bounds</li> </ul>
+###🚀 Future Enhancements
+<ul> <li>Add pollutant-specific models (PM2.5, PM10, NO₂, O₃)</li> <li>Integrate meteorological and traffic data</li> <li>Expand to multiple Bangalore localities</li> <li>Automated retraining and monitoring pipeline</li> <li>Interactive visualizations using Plotly</li> </ul>
+###🏛️ Policy-Oriented Summary
+<p> Short-term AQI forecasts provide actionable insights for residents and ward-level planners. Long-term trends help identify worsening air quality patterns but must always be interpreted alongside uncertainty ranges and real-time monitoring data. </p>
+###👤 Credits & Contact
+<p> <strong>Author:</strong> Aditya K <br> <strong>Dataset:</strong> BBMP Open Data <br> <strong>Location:</strong> Jayanagar, Bangalore <br> <strong>Live App:</strong> <a href="https://airqualityprediction-dsrrqwazf2hrwqg8g6bvme.streamlit.app/">Streamlit Demo</a> <br> <strong>Repository:</strong> <a href="https://github.com/AdityaRKori/AirQualityPrediction">GitHub Repo</a> </p>
+###📄 License
+<p> MIT License </p> ```
 
-notebooks/train_prophet.ipynb — EDA + training steps
-
-data/ — (raw + processed CSVs, if included)
-
-model/ — saved Prophet model artifacts
-
-requirements.txt — pinned dependencies
-
-Limitations & caveats
-
-Local-only: trained for Jayanagar — do not generalize to other neighborhoods without retraining.
-
-Data window: forecast horizon practical limit ≈ 6 years (2018–2023 training).
-
-No meteorological covariates (wind, humidity, temp). Adding them would improve short-term accuracy.
-
-Probabilistic outputs: always consider prediction intervals, not just median.
-
-Future work
-
-Add pollutant-specific models (PM2.5, PM10, NO₂).
-
-Incorporate weather & traffic regressors.
-
-Multi-station city-level modeling & spatial interpolation.
-
-CI/CD retraining with automated model monitoring and drift detection.
-
-Interactive Plotly charts for better exploration.
-
-Policy-friendly summary (one-paragraph)
-
-Short-term AQI forecasts (days/weeks) provide actionable signals for residents and ward-level planners (e.g., school schedules, event planning). Longer-term forecasts (1+ years) are useful for trend detection; however, policy decisions should weigh model uncertainty and combine forecasts with on-the-ground monitoring and meteorological inputs.
-
-Credits & contact
-
-Built by Aditya K
-
-Data: BBMP (Bruhat Bengaluru Mahanagara Palike)
-
-Station: Jayanagar
-
-Live demo: https://airqualityprediction-dsrrqwazf2hrwqg8g6bvme.streamlit.app/
-
-Repo: https://github.com/AdityaRKori/AirQualityPrediction
-
-License
-
-MIT (or add a preferred LICENSE file)
+---
