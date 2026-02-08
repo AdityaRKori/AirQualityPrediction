@@ -241,13 +241,13 @@ Streamlit Flow ASCII
 
 ---
 
-###📊 Model Evaluation Summary
+### 📊 Model Evaluation Summary
 
 <p> <strong>Primary Metric:</strong> Root Mean Squared Error (RMSE) on log-transformed AQI values <br> <strong>Example Observed RMSE:</strong> <code>2.8069</code> </p> <p> Short-term forecasts (days to weeks) are more reliable for operational decisions. Long-term forecasts are best suited for trend analysis due to increasing uncertainty. </p>
 
 ---
 
-###▶️ How to Run Locally
+### ▶️ How to Run Locally
 git clone https://github.com/AdityaRKori/AirQualityPrediction.git
 cd AirQualityPrediction
 
@@ -260,17 +260,17 @@ streamlit run app.py
 
 ---
 
-###📁 Files of Interest
+### 📁 Files of Interest
 <ul> <li><strong>app.py</strong> — Streamlit application interface</li> <li><strong>notebooks/train_prophet.ipynb</strong> — Data preprocessing and model training</li> <li><strong>data/</strong> — Raw and processed AQI datasets</li> <li><strong>model/</strong> — Saved Prophet model artifacts</li> <li><strong>requirements.txt</strong> — Python dependencies</li> </ul>
-###⚠️ Limitations & Caveats
+### ⚠️ Limitations & Caveats
 <ul> <li>Model trained only on Jayanagar AQI data</li> <li>Forecast horizon limited to approximately 6 years</li> <li>Weather variables are not included</li> <li>Predictions are probabilistic and must be interpreted with uncertainty bounds</li> </ul>
-###🚀 Future Enhancements
+### 🚀 Future Enhancements
 <ul> <li>Add pollutant-specific models (PM2.5, PM10, NO₂, O₃)</li> <li>Integrate meteorological and traffic data</li> <li>Expand to multiple Bangalore localities</li> <li>Automated retraining and monitoring pipeline</li> <li>Interactive visualizations using Plotly</li> </ul>
-###🏛️ Policy-Oriented Summary
+### 🏛️ Policy-Oriented Summary
 <p> Short-term AQI forecasts provide actionable insights for residents and ward-level planners. Long-term trends help identify worsening air quality patterns but must always be interpreted alongside uncertainty ranges and real-time monitoring data. </p>
-###👤 Credits & Contact
+### 👤 Credits & Contact
 <p> <strong>Author:</strong> Aditya K <br> <strong>Dataset:</strong> BBMP Open Data <br> <strong>Location:</strong> Jayanagar, Bangalore <br> <strong>Live App:</strong> <a href="https://airqualityprediction-dsrrqwazf2hrwqg8g6bvme.streamlit.app/">Streamlit Demo</a> <br> <strong>Repository:</strong> <a href="https://github.com/AdityaRKori/AirQualityPrediction">GitHub Repo</a> </p>
-###📄 License
+### 📄 License
 <p> MIT License </p> ```
 
 ---
